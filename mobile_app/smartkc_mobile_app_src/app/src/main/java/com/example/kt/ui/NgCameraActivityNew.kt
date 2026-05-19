@@ -15,8 +15,12 @@ import android.util.Log
 import android.util.Size
 import android.util.SizeF
 import android.view.MotionEvent
+import android.widget.ImageButton
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.*
@@ -34,7 +38,6 @@ import com.example.kt.utils.DrawUtils
 import com.example.kt.utils.ImageUtils
 import com.example.kt.utils.PreferenceKeys
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.activity_cameranew.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.opencv.android.Utils
@@ -88,6 +91,19 @@ class NgCameraActivityNew : AppCompatActivity() {
     /*** Views  */
     private var myPreviewView: PreviewView? = null
     //private var myImageView: ImageView? = null
+    private val camera_capture_button get() = findViewById<ImageButton>(R.id.camera_capture_button)
+    private val circle_overlay get() = findViewById<com.example.kt.ui.layout.CircleLayout>(R.id.circle_overlay)
+    private val cross_hair get() = findViewById<com.example.kt.ui.layout.CrossHairLayout>(R.id.cross_hair)
+    private val cross_hair_mire get() = findViewById<com.example.kt.ui.layout.CrossHairLayout>(R.id.cross_hair_mire)
+    private val limbus_width get() = findViewById<com.example.kt.ui.layout.LimbusWidthLayout>(R.id.limbus_width)
+    private val progressBar get() = findViewById<ProgressBar>(R.id.progressBar)
+    private val rect_overlay_correct get() = findViewById<com.example.kt.ui.layout.RectOverlay>(R.id.rect_overlay_correct)
+    private val text_center get() = findViewById<TextView>(R.id.text_center)
+    private val text_over_under get() = findViewById<TextView>(R.id.text_over_under)
+    private val text_sharp get() = findViewById<TextView>(R.id.text_sharp)
+    private val unlock_auto_capture_click get() = findViewById<SwitchCompat>(R.id.unlock_auto_capture_click)
+    private val unlock_cross_switch get() = findViewById<SwitchCompat>(R.id.unlock_cross_switch)
+    private val viewFinder get() = findViewById<PreviewView>(R.id.viewFinder)
 
     /*** For CameraX  */
     private var imageAnalysis: ImageAnalysis? = null
@@ -144,7 +160,7 @@ class NgCameraActivityNew : AppCompatActivity() {
         // get current idx
         val prefix = center_name + "_" + dir_name + "_" +  left_right
         val dir = File(getExternalFilesDir(null), MainActivity.PACKAGE_NAME + "/" + dir_name)
-        if(dir.listFiles { dir, name -> name.toLowerCase().startsWith(prefix) } != null)
+        if(dir.listFiles { dir, name -> name.lowercase().startsWith(prefix) } != null)
             idx = dir.listFiles { dir, name -> name.startsWith(prefix) }.size
 
 
@@ -373,7 +389,7 @@ class NgCameraActivityNew : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if(this@NgCameraActivityNew::camera.isInitialized) {
-            camera?.cameraControl.setZoomRatio(zoom_factor.toFloat())
+            camera.cameraControl.setZoomRatio(zoom_factor.toFloat())
         }
     }
 

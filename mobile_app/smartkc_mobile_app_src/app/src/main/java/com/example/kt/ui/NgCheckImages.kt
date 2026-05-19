@@ -15,6 +15,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ImageCapture
@@ -24,7 +25,6 @@ import org.apache.commons.io.comparator.LastModifiedFileComparator
 import com.jsibbold.zoomage.ZoomageView
 import com.opencsv.CSVWriter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.activity_checkimages.*
 import kotlinx.coroutines.runBlocking
 import org.opencv.imgproc.Imgproc
 import org.opencv.android.Utils
@@ -65,6 +65,12 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
     var cameraPhysicalSize: String? = null
     var focalLength: Float? = null
     var center_name: String? = null
+    private val centerMarkingCv get() = findViewById<ConstraintLayout>(R.id.centerMarkingCv)
+    private val imagePreviewCv get() = findViewById<ConstraintLayout>(R.id.imagePreviewCv)
+    private val mark_cener_btn get() = findViewById<Button>(R.id.mark_cener_btn)
+    private val myimage get() = findViewById<ZoomageView>(R.id.myimage)
+    private val questionView get() = findViewById<TextView>(R.id.questionView)
+    private val skip_btn get() = findViewById<Button>(R.id.skip_btn)
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_checkimages)

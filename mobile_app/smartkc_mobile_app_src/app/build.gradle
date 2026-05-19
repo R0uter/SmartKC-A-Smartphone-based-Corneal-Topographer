@@ -1,25 +1,31 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 apply plugin: "dagger.hilt.android.plugin"
-apply plugin: "com.google.gms.google-services"
-apply plugin: "com.google.firebase.crashlytics"
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
+    apply plugin: "com.google.firebase.crashlytics"
+}
 
 android {
-    compileSdkVersion 33
+    namespace "com.example.kt"
+    compileSdk 34
     buildToolsVersion "29.0.2"
+
+    buildFeatures {
+        buildConfig true
+    }
 
     defaultConfig {
         applicationId "com.example.kt"
-        minSdkVersion 21
-        targetSdkVersion 33
+        minSdk 21
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
         ndk {
-            abiFilters "armeabi", "armeabi-v7a", "x86", "mips"
+            abiFilters "armeabi-v7a", "x86"
         }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -33,8 +39,6 @@ android {
         release {
             buildConfigField "String", "UPLOAD_URL", "\"https://url/pre/\""
             buildConfigField "boolean", "UPLOAD_ENABLED", "false"
-        }
-        release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -42,6 +46,9 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 
     kapt {
@@ -101,7 +108,7 @@ dependencies {
     implementation 'com.github.chrisbanes:PhotoView:2.1.4'
 
     // Room Dependency
-    def room_version = "2.4.3"
+    def room_version = "2.7.2"
 
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
@@ -110,7 +117,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
 
     // Hilt
-    def dagger_hilt_version = "2.34.1-beta"
+    def dagger_hilt_version = "2.57.2"
     def androidx_hilt_version = "1.0.0-beta01"
     implementation "com.google.dagger:hilt-android:$dagger_hilt_version"
     implementation "com.google.dagger:hilt-compiler:$dagger_hilt_version"
@@ -118,6 +125,7 @@ dependencies {
 
     kapt "com.google.dagger:hilt-compiler:$dagger_hilt_version"
     kapt "androidx.hilt:hilt-compiler:$androidx_hilt_version"
+    kapt "org.jetbrains.kotlin:kotlin-metadata-jvm:$kotlin_version"
 
     // Lifecycle
     def lifecycle_version = "2.6.0-alpha03"

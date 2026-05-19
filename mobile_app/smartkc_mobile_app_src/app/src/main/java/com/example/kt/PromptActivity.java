@@ -2,6 +2,7 @@ package com.example.kt;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -29,8 +30,7 @@ public class PromptActivity extends Activity
         dir_name = bundle.getString("dir_name");
         left_right = bundle.getString("left_right");
         number_of_images = bundle.getString("number_of_images");
-        // there may be a better way to do this
-        hash_map =  (HashMap<String, String>)getIntent().getSerializableExtra("hash_map");
+        hash_map = getHashMapExtra(getIntent(), "hash_map");
 
         //setting activity view
         setContentView(R.layout.activity_prompt);
@@ -67,5 +67,13 @@ public class PromptActivity extends Activity
             //start the second Activity
             this.startActivity(intent);
         }
+    }
+
+    @SuppressWarnings({"deprecation", "unchecked"})
+    private static HashMap<String, String> getHashMapExtra(Intent intent, String name) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return intent.getSerializableExtra(name, HashMap.class);
+        }
+        return (HashMap<String, String>) intent.getSerializableExtra(name);
     }
 }

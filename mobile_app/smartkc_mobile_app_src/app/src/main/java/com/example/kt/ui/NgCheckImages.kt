@@ -9,7 +9,6 @@ import android.graphics.Matrix
 import android.graphics.PointF
 import android.media.ExifInterface
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -25,6 +24,7 @@ import com.example.kt.injection.dataStore
 import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.ImageUtils
 import com.example.kt.utils.PreferenceKeys
+import com.example.kt.utils.serializableExtraCompat
 import org.apache.commons.io.comparator.LastModifiedFileComparator
 import com.jsibbold.zoomage.ZoomageView
 import com.opencsv.CSVWriter
@@ -84,7 +84,7 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
         val bundle = intent.extras
         dir_name = bundle!!.getString("dir_name")
         left_right = bundle.getString("left_right")
-        hash_map = intent.getSerializableExtra("hash_map") as HashMap<String, String>?
+        hash_map = intent.serializableExtraCompat<HashMap<String, String>>("hash_map")
         origMaxCounts = bundle.getString("number_of_images")!!.toInt()
         cameraPhysicalSize = bundle.getString("camera_physical_size")
         focalLength = bundle.getFloat("focal_length")
@@ -110,7 +110,7 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
             name.startsWith(
                 prefix
             )
-        }
+        } ?: emptyArray()
         Arrays.sort(imageFiles, LastModifiedFileComparator.LASTMODIFIED_REVERSE)
         // incase there are less number of images than maxCounts
         maxCounts = Math.min(imageFiles.size, origMaxCounts)
@@ -134,7 +134,7 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
         removeView()
         // show image
         //showImage();
-        AsyncTask.execute { showImage() }
+        runImageCheck()
     }
 
     private fun showImage() {
@@ -200,7 +200,7 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
                     this.startActivity(intent)
                 } else {
                     removeView()
-                    AsyncTask.execute { showImage() }
+                    runImageCheck()
                 }
             }
             R.id.yes_btn -> {
@@ -266,6 +266,10 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
         return
     }
 
+    private fun runImageCheck() {
+        Thread { showImage() }.start()
+    }
+
     private fun removeView() {
 
         // remove photo
@@ -319,7 +323,7 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
             getExternalFilesDir(null),
             MainActivity.PACKAGE_NAME + "/" + dir_name
         )
-        val files = dir.listFiles()
+        val files = dir.listFiles() ?: emptyArray()
         Arrays.sort(files, LastModifiedFileComparator.LASTMODIFIED_REVERSE)
         Log.e("Finish", "Inside Write Metadata Size: " + files.size)
         val fileName = center_name + "_" + dir_name + ".csv"

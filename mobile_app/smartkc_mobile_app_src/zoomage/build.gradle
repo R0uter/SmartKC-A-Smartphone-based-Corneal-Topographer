@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 version = '1.3.1'
 
 android {
-    namespace "com.jsibbold.zoomage"
+    namespace = "com.jsibbold.zoomage"
     compileSdk 33
 
     defaultConfig {
@@ -17,8 +17,8 @@ android {
         }
     }
     lint {
-        textOutput file('stdout')
-        textReport true
+        textOutput = file('stdout')
+        textReport = true
         targetSdk 33
     }
     testOptions {

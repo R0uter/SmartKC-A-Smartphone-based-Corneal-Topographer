@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -18,10 +17,11 @@ import com.example.kt.data.repo.FileRepository
 import com.example.kt.injection.dataStore
 import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.PreferenceKeys
+import com.example.kt.utils.serializableExtraCompat
 import org.apache.commons.io.comparator.LastModifiedFileComparator
-import com.github.chrisbanes.photoview.PhotoView
 import com.opencsv.CSVWriter
 import dagger.hilt.android.AndroidEntryPoint
+import io.getstream.photoview.PhotoView
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.opencv.imgproc.Imgproc
@@ -67,7 +67,7 @@ class CheckImages : AppCompatActivity(), View.OnClickListener {
         val bundle = intent.extras
         dir_name = bundle!!.getString("dir_name")
         left_right = bundle.getString("left_right")
-        hash_map = intent.getSerializableExtra("hash_map") as HashMap<String, String>?
+        hash_map = intent.serializableExtraCompat<HashMap<String, String>>("hash_map")
         origMaxCounts = bundle.getString("number_of_images")!!.toInt()
         image_index = 0 // initialize image index as 0
 
@@ -84,7 +84,7 @@ class CheckImages : AppCompatActivity(), View.OnClickListener {
             name.lowercase(Locale.getDefault()).startsWith(
                 left_right!!
             )
-        }
+        } ?: emptyArray()
         Arrays.sort(imageFiles, LastModifiedFileComparator.LASTMODIFIED_REVERSE)
         // incase there are less number of images than maxCounts
         maxCounts = Math.min(imageFiles.size, origMaxCounts)
@@ -102,7 +102,7 @@ class CheckImages : AppCompatActivity(), View.OnClickListener {
         removeView()
         // show image
         //showImage();
-        AsyncTask.execute { showImage() }
+        runImageCheck()
     }
 
     private fun showImage() {
@@ -166,7 +166,7 @@ class CheckImages : AppCompatActivity(), View.OnClickListener {
                     this.startActivity(intent)
                 } else {
                     removeView()
-                    AsyncTask.execute { showImage() }
+                    runImageCheck()
                 }
             }
             R.id.yes_btn -> {
@@ -199,6 +199,10 @@ class CheckImages : AppCompatActivity(), View.OnClickListener {
         val noButtomView = findViewById<View>(R.id.no_btn)
         noButtomView.performClick()
         return
+    }
+
+    private fun runImageCheck() {
+        Thread { showImage() }.start()
     }
 
     private fun removeView() {
@@ -254,7 +258,7 @@ class CheckImages : AppCompatActivity(), View.OnClickListener {
             getExternalFilesDir(null),
             MainActivity.PACKAGE_NAME + "/" + dir_name
         )
-        val files = dir.listFiles()
+        val files = dir.listFiles() ?: emptyArray()
         Arrays.sort(files, LastModifiedFileComparator.LASTMODIFIED_REVERSE)
         Log.e("Finish", "Inside Write Metadata Size: " + files.size)
         val filePath = getExternalFilesDir(null)!!.absolutePath + File.separator +

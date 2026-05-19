@@ -8,11 +8,11 @@ if (file("google-services.json").exists()) {
 }
 
 android {
-    namespace "com.example.kt"
+    namespace = "com.example.kt"
     compileSdk 34
 
     buildFeatures {
-        buildConfig true
+        buildConfig = true
     }
 
     defaultConfig {
@@ -59,7 +59,7 @@ android {
 
 repositories{
     mavenCentral()
-    maven { url "https://jitpack.io" }
+    maven { url = "https://jitpack.io" }
 }
 
 dependencies {
@@ -73,7 +73,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'androidx.annotation:annotation:1.0.2'
-    implementation group: 'commons-io', name: 'commons-io', version: '2.0.1'
+    implementation 'commons-io:commons-io:2.0.1'
     implementation "com.opencsv:opencsv:4.0"
 
     //implementation 'com.camerakit:camerakit:1.0.0-beta3.11'
@@ -92,8 +92,8 @@ dependencies {
     // If you want to additionally use the CameraX Extensions library
     implementation "androidx.camera:camera-extensions:1.0.0-alpha19"
 
-    //PhotoView
-    implementation 'com.github.chrisbanes:PhotoView:2.1.4'
+    // PhotoView AndroidX fork
+    implementation 'io.getstream:photoview:1.0.3'
 
     // Room Dependency
     def room_version = "2.7.2"

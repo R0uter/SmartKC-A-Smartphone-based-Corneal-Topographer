@@ -37,6 +37,7 @@ import com.example.kt.data.repo.FileRepository
 import com.example.kt.injection.dataStore
 import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.PreferenceKeys
+import com.example.kt.utils.serializableExtraCompat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -166,12 +167,11 @@ class CameraActivityNew : AppCompatActivity() {
         dir_name = bundle!!.getString("dir_name")
         left_right = bundle.getString("left_right")
         maxCounts = bundle.getString("number_of_images")?.toInt() ?: 3
-        hash_map = getIntent().getSerializableExtra("hash_map") as HashMap<*, *>
+        hash_map = intent.serializableExtraCompat<HashMap<*, *>>("hash_map")
 
         // get current idx
         val dir = File(getExternalFilesDir(null), MainActivity.PACKAGE_NAME + "/" + dir_name)
-        if(dir.listFiles { dir, name -> name.lowercase().startsWith(left_right!!) } != null)
-            idx = dir.listFiles { dir, name -> name.lowercase().startsWith(left_right!!) }.size
+        idx = dir.listFiles { _, name -> name.lowercase().startsWith(left_right!!) }?.size ?: 0
 
         outputDirectory = getOutputDirectory()
         cameraExecutor = Executors.newSingleThreadExecutor()

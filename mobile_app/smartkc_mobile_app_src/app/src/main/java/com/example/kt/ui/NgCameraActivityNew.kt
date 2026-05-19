@@ -38,6 +38,7 @@ import com.example.kt.utils.DrawUtils
 import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.ImageUtils
 import com.example.kt.utils.PreferenceKeys
+import com.example.kt.utils.serializableExtraCompat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -150,7 +151,7 @@ class NgCameraActivityNew : AppCompatActivity() {
         dir_name = bundle!!.getString("dir_name")
         left_right = bundle.getString("left_right")
         maxCounts = bundle.getString("number_of_images")?.toInt() ?: 3
-        hash_map = getIntent().getSerializableExtra("hash_map") as HashMap<*, *>
+        hash_map = intent.serializableExtraCompat<HashMap<*, *>>("hash_map")
 
         // Get center name
         center_name = sharedPrefs.getString("CENTER_NAME", "")
@@ -161,8 +162,7 @@ class NgCameraActivityNew : AppCompatActivity() {
         // get current idx
         val prefix = center_name + "_" + dir_name + "_" +  left_right
         val dir = File(getExternalFilesDir(null), MainActivity.PACKAGE_NAME + "/" + dir_name)
-        if(dir.listFiles { dir, name -> name.lowercase().startsWith(prefix) } != null)
-            idx = dir.listFiles { dir, name -> name.startsWith(prefix) }.size
+        idx = dir.listFiles { _, name -> name.startsWith(prefix) }?.size ?: 0
 
 
         outputDirectory = getOutputDirectory()

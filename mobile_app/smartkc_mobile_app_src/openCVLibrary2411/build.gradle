@@ -2,8 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     namespace "org.opencv"
-    compileSdk 29
-    buildToolsVersion "29.0.2"
+    compileSdk 34
 
     buildFeatures {
         aidl true
@@ -11,13 +10,18 @@ android {
 
     defaultConfig {
         minSdk 21
-        targetSdk 29
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'
         }
+    }
+    lint {
+        targetSdk 29
+    }
+    testOptions {
+        targetSdk 29
     }
 }

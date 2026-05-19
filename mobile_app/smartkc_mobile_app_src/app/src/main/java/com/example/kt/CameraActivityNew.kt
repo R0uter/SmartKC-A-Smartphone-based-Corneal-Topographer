@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.kt.data.repo.FileRepository
 import com.example.kt.injection.dataStore
+import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.PreferenceKeys
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
@@ -233,6 +234,15 @@ class CameraActivityNew : AppCompatActivity() {
                     val idx = fileNameParts[fileNameParts.size-1]
                     val fileName = "${center_name}/${dir_name?.split("_")?.get(0)}/${left_right}/${idx}"
                     fileRepository.insertNewFileRecord(savedUri.toString(), fileName)
+                    val data = dataStore.data.first()
+                    val imageSaveTreeUri = data[stringPreferencesKey(PreferenceKeys.IMAGE_SAVE_TREE_URI)]
+                    ImageSaveLocation.copyToSelectedFolder(
+                        this@CameraActivityNew,
+                        imageSaveTreeUri,
+                        base_dir,
+                        dir_name,
+                        photoFile
+                    )
                 }
                 Toast.makeText(baseContext, "Counts:" + (currentCounts + 1) + "/" + maxCounts, Toast.LENGTH_SHORT).show()
                 Log.d(TAG, msg)
@@ -375,17 +385,7 @@ class CameraActivityNew : AppCompatActivity() {
 
 
     private fun getOutputDirectory(): File {
-        // ugly way to do this, fix if needed
-        var dir = File(getExternalFilesDir(null), base_dir)
-        if (!dir.exists()) {
-            dir.mkdirs()
-            Log.e(TAG, "Output directory Created")
-        }
-        dir = File(getExternalFilesDir(null), base_dir + '/' + dir_name)
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-        return dir
+        return ImageSaveLocation.defaultSessionDirectory(this, base_dir, dir_name)
     }
 
     override fun onResume() {

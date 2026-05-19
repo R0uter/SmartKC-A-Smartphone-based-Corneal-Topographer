@@ -19,12 +19,17 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ImageCapture
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.kt.data.repo.FileRepository
+import com.example.kt.injection.dataStore
+import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.ImageUtils
+import com.example.kt.utils.PreferenceKeys
 import org.apache.commons.io.comparator.LastModifiedFileComparator
 import com.jsibbold.zoomage.ZoomageView
 import com.opencsv.CSVWriter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.opencv.imgproc.Imgproc
 import org.opencv.android.Utils
@@ -396,7 +401,19 @@ class NgCheckImages : AppCompatActivity(), View.OnClickListener {
             }
             writer.close()
             val blobFileName = "${center_name}/${dir_name?.split("_")?.get(0)}/${fileName}"
-            runBlocking { fileRepository.insertNewFileRecord(Uri.fromFile(f).toString(), blobFileName) }
+            runBlocking {
+                fileRepository.insertNewFileRecord(Uri.fromFile(f).toString(), blobFileName)
+                val data = dataStore.data.first()
+                val imageSaveTreeUri = data[stringPreferencesKey(PreferenceKeys.IMAGE_SAVE_TREE_URI)]
+                ImageSaveLocation.copyToSelectedFolder(
+                    this@NgCheckImages,
+                    imageSaveTreeUri,
+                    MainActivity.PACKAGE_NAME,
+                    dir_name,
+                    f,
+                    "text/csv"
+                )
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

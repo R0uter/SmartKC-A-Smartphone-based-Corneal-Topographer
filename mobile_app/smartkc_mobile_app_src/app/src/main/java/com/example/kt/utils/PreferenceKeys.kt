@@ -6,4 +6,5 @@ object PreferenceKeys {
     const val UPLOAD_SECRET = "upload_secret"
     const val UPLOAD_ENABLED = "upload_enabled"
     const val CHOSEN_CAMERA = "chosen_camera"
+    const val IMAGE_SAVE_TREE_URI = "image_save_tree_uri"
 }

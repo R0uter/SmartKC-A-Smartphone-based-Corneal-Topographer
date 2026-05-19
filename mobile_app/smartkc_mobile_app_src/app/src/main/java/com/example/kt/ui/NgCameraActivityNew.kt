@@ -35,6 +35,7 @@ import com.example.kt.R
 import com.example.kt.data.repo.FileRepository
 import com.example.kt.injection.dataStore
 import com.example.kt.utils.DrawUtils
+import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.ImageUtils
 import com.example.kt.utils.PreferenceKeys
 import dagger.hilt.android.AndroidEntryPoint
@@ -220,6 +221,15 @@ class NgCameraActivityNew : AppCompatActivity() {
                     runBlocking {
                         val blobFileName = "${center_name}/${dir_name?.split("_")?.get(0)}/${left_right}/${fileName}"
                         fileRepository.insertNewFileRecord(savedUri.toString(), blobFileName)
+                        val data = dataStore.data.first()
+                        val imageSaveTreeUri = data[stringPreferencesKey(PreferenceKeys.IMAGE_SAVE_TREE_URI)]
+                        ImageSaveLocation.copyToSelectedFolder(
+                            this@NgCameraActivityNew,
+                            imageSaveTreeUri,
+                            base_dir,
+                            dir_name,
+                            photoFile
+                        )
                     }
                     Toast.makeText(baseContext, "Counts:" + (currentCounts + 1) + "/" + maxCounts, Toast.LENGTH_SHORT).show()
                     // play capture sound
@@ -373,17 +383,7 @@ class NgCameraActivityNew : AppCompatActivity() {
 
 
     private fun getOutputDirectory(): File {
-        // ugly way to do this, fix if needed
-        var dir = File(getExternalFilesDir(null), base_dir)
-        if (!dir.exists()) {
-            dir.mkdirs()
-            Log.e(TAG, "Output directory Created")
-        }
-        dir = File(getExternalFilesDir(null), base_dir + '/' + dir_name)
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-        return dir
+        return ImageSaveLocation.defaultSessionDirectory(this, base_dir, dir_name)
     }
 
     override fun onResume() {

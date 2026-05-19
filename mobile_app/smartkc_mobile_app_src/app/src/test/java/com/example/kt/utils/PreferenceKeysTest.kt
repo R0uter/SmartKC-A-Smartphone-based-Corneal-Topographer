@@ -12,5 +12,6 @@ class PreferenceKeysTest {
         assertEquals("upload_secret", PreferenceKeys.UPLOAD_SECRET)
         assertEquals("upload_enabled", PreferenceKeys.UPLOAD_ENABLED)
         assertEquals("chosen_camera", PreferenceKeys.CHOSEN_CAMERA)
+        assertEquals("image_save_tree_uri", PreferenceKeys.IMAGE_SAVE_TREE_URI)
     }
 }

@@ -1,18 +1,21 @@
 package com.example.kt
 
 import android.content.Context
+import android.content.Intent
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.*
-import android.widget.AdapterView.OnItemSelectedListener
+import android.provider.DocumentsContract
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.lifecycle.lifecycleScope
+import com.example.kt.utils.ImageSaveLocation
 import com.example.kt.utils.PreferenceKeys
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -30,6 +33,7 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
     lateinit var uploadSecretEt: EditText
     lateinit var uploadSwitch: SwitchCompat
     lateinit var spinner: Spinner
+    lateinit var imageSavePathTv: TextView
 
     @Inject
     lateinit var dataStore: DataStore<Preferences>
@@ -40,6 +44,7 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
     val uploadSecretKey = stringPreferencesKey(PreferenceKeys.UPLOAD_SECRET)
     val uploadEnabledKey = booleanPreferencesKey(PreferenceKeys.UPLOAD_ENABLED)
     val selectedCameraKey = stringPreferencesKey(PreferenceKeys.CHOSEN_CAMERA)
+    val imageSaveTreeUriKey = stringPreferencesKey(PreferenceKeys.IMAGE_SAVE_TREE_URI)
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +57,7 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
         uploadSecretEt = findViewById(R.id.update_upload_secret_et)
         uploadSwitch = findViewById(R.id.upload_switch)
         spinner = findViewById(R.id.camera_list_spinner)
+        imageSavePathTv = findViewById(R.id.image_save_path_value)
 
         // Get list of logical cameras
         val cameraManager: CameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
@@ -66,6 +72,8 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
         val buttonClick = findViewById<View>(R.id.SavePreference)
         //set event listener
         buttonClick.setOnClickListener(this)
+        findViewById<View>(R.id.choose_image_save_path).setOnClickListener(this)
+        findViewById<View>(R.id.clear_image_save_path).setOnClickListener(this)
         //set event listener for the switch
         uploadSwitch.setOnCheckedChangeListener { _, checked ->
             modifyUploadView(checked)
@@ -79,12 +87,14 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
             val uploadSecret = data[uploadSecretKey] ?: ""
             val uploadEnabled = data[uploadEnabledKey] ?: BuildConfig.UPLOAD_ENABLED
             val selectedCamera = data[selectedCameraKey]
+            val imageSaveTreeUri = data[imageSaveTreeUriKey]
 
             centerCutoffEt.setText(centerCutOff.toString())
             uploadUrlEt.setText(uploadUrl)
             uploadSecretEt.setText(uploadSecret)
             uploadSwitch.isChecked = uploadEnabled
             if(selectedCamera != null) spinner.setSelection(adapter.getPosition(selectedCamera))
+            imageSavePathTv.text = ImageSaveLocation.folderLabel(imageSaveTreeUri)
             modifyUploadView(uploadEnabled)
         }
     }
@@ -143,6 +153,39 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
 
             }
 
+        } else if (arg0.id == R.id.choose_image_save_path) {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse("content://com.android.externalstorage.documents/root/primary"))
+            }
+            startActivityForResult(intent, REQUEST_IMAGE_SAVE_FOLDER)
+        } else if (arg0.id == R.id.clear_image_save_path) {
+            lifecycleScope.launch {
+                dataStore.edit { prefs -> prefs.remove(imageSaveTreeUriKey) }
+                imageSavePathTv.text = ImageSaveLocation.folderLabel(null)
+                Toast.makeText(applicationContext, "Using default app folder", Toast.LENGTH_SHORT).show()
+            }
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMAGE_SAVE_FOLDER && resultCode == RESULT_OK) {
+            val uri = data?.data ?: return
+            val flags = data.flags and
+                    (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            contentResolver.takePersistableUriPermission(uri, flags)
+            lifecycleScope.launch {
+                dataStore.edit { prefs -> prefs[imageSaveTreeUriKey] = uri.toString() }
+                imageSavePathTv.text = ImageSaveLocation.folderLabel(uri.toString())
+                Toast.makeText(applicationContext, "Image folder saved", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    companion object {
+        private const val REQUEST_IMAGE_SAVE_FOLDER = 101
     }
 }

@@ -13,11 +13,16 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.kt.data.repo.FileRepository
+import com.example.kt.injection.dataStore
+import com.example.kt.utils.ImageSaveLocation
+import com.example.kt.utils.PreferenceKeys
 import org.apache.commons.io.comparator.LastModifiedFileComparator
 import com.github.chrisbanes.photoview.PhotoView
 import com.opencsv.CSVWriter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.opencv.imgproc.Imgproc
 import org.opencv.android.Utils
@@ -328,7 +333,19 @@ class CheckImages : AppCompatActivity(), View.OnClickListener {
                 throw Error("Center name cannot be null")
             }
             val fileName = "${center_name}/${dir_name?.split("_")?.get(0)}/meta_data.csv"
-            runBlocking { fileRepository.insertNewFileRecord(Uri.fromFile(f).toString(), fileName) }
+            runBlocking {
+                fileRepository.insertNewFileRecord(Uri.fromFile(f).toString(), fileName)
+                val data = dataStore.data.first()
+                val imageSaveTreeUri = data[stringPreferencesKey(PreferenceKeys.IMAGE_SAVE_TREE_URI)]
+                ImageSaveLocation.copyToSelectedFolder(
+                    this@CheckImages,
+                    imageSaveTreeUri,
+                    MainActivity.PACKAGE_NAME,
+                    dir_name,
+                    f,
+                    "text/csv"
+                )
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

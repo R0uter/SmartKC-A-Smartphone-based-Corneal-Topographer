@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.*
-import android.provider.DocumentsContract
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.datastore.core.DataStore
@@ -73,6 +72,7 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
         //set event listener
         buttonClick.setOnClickListener(this)
         findViewById<View>(R.id.choose_image_save_path).setOnClickListener(this)
+        findViewById<View>(R.id.use_downloads_image_save_path).setOnClickListener(this)
         findViewById<View>(R.id.clear_image_save_path).setOnClickListener(this)
         //set event listener for the switch
         uploadSwitch.setOnCheckedChangeListener { _, checked ->
@@ -158,9 +158,15 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse("content://com.android.externalstorage.documents/root/primary"))
+                addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
             }
             startActivityForResult(intent, REQUEST_IMAGE_SAVE_FOLDER)
+        } else if (arg0.id == R.id.use_downloads_image_save_path) {
+            lifecycleScope.launch {
+                dataStore.edit { prefs -> prefs[imageSaveTreeUriKey] = ImageSaveLocation.DOWNLOADS_URI }
+                imageSavePathTv.text = ImageSaveLocation.folderLabel(ImageSaveLocation.DOWNLOADS_URI)
+                Toast.makeText(applicationContext, "Images and CSV will copy to Downloads/KT", Toast.LENGTH_SHORT).show()
+            }
         } else if (arg0.id == R.id.clear_image_save_path) {
             lifecycleScope.launch {
                 dataStore.edit { prefs -> prefs.remove(imageSaveTreeUriKey) }
@@ -174,9 +180,13 @@ class UpdatePreferences : AppCompatActivity(), View.OnClickListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_IMAGE_SAVE_FOLDER && resultCode == RESULT_OK) {
             val uri = data?.data ?: return
-            val flags = data.flags and
+            val persistableFlags = data.flags and
                     (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            contentResolver.takePersistableUriPermission(uri, flags)
+            if (persistableFlags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION == 0) {
+                Toast.makeText(applicationContext, "Selected folder did not grant write permission", Toast.LENGTH_LONG).show()
+                return
+            }
+            contentResolver.takePersistableUriPermission(uri, persistableFlags)
             lifecycleScope.launch {
                 dataStore.edit { prefs -> prefs[imageSaveTreeUriKey] = uri.toString() }
                 imageSavePathTv.text = ImageSaveLocation.folderLabel(uri.toString())
